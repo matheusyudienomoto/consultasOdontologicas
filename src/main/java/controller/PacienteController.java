@@ -19,18 +19,24 @@ public class PacienteController {
 
     // LISTAR TODOS E PESQUISA
     @GetMapping
-    public String listar(@RequestParam(required = false) String busca, Model model) {
-        // Se o usuário digitou algo na busca, a gente tenta filtrar (vamos criar esse método no Repository depois)
-        // Se não, lista todos normalmente
+    public String listar(@RequestParam(required = false) String busca,
+                         @RequestParam(required = false, defaultValue = "ASC") String sort,
+                         Model model) {
+
+        org.springframework.data.domain.Sort sortOrder = sort.equalsIgnoreCase("DESC") ?
+                org.springframework.data.domain.Sort.by("nome").descending() :
+                org.springframework.data.domain.Sort.by("nome").ascending();
+
         if (busca != null && !busca.isEmpty()) {
-            // Deixei comentado porque você ainda precisa criar o findByNomeContaining no Repository!
-            // model.addAttribute("pacientes", repository.findByNomeContaining(busca));
+            model.addAttribute("pacientes", repository.findByNomeContainingIgnoreCase(busca));
         } else {
-            model.addAttribute("pacientes", repository.findAll());
+            model.addAttribute("pacientes", repository.findAll(sortOrder));
         }
+
+        // Prepara o botão para inverter a ordem no próximo clique
+        model.addAttribute("nextSort", sort.equalsIgnoreCase("ASC") ? "DESC" : "ASC");
         return "pacientes";
     }
-
     // ABRIR FORMULÁRIO DE CADASTRO
     @GetMapping("/novo")
     public String mostrarFormularioCadastro(Model model) {
