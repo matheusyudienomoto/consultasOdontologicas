@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciamento de Dentistas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Gerenciamento de Dentistas</h2>
+
+    <div class="d-flex justify-content-between mb-3 mt-4">
+        <a th:href="@{/dentistas/novo}" class="btn btn-primary">+ Novo Dentista</a>
+
+        <form th:action="@{/dentistas}" method="get" class="d-flex">
+            <input type="text" name="busca" class="form-control me-2" placeholder="Buscar por nome..." th:value="${param.busca}">
+            <button type="submit" class="btn btn-outline-success">Pesquisar</button>
+        </form>
+    </div>
+
+    <!-- Alertas do Bootstrap para feedback visual -->
+    <div th:if="${mensagemSucesso}" class="alert alert-success" th:text="${mensagemSucesso}"></div>
+    <div th:if="${mensagemErro}" class="alert alert-danger" th:text="${mensagemErro}"></div>
+
+    <table class="table table-striped table-bordered mt-3">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>
+                <!-- Link para acionar a ordenação alternada -->
+                <a th:href="@{/dentistas(sort=${nextSort})}" style="text-decoration: none; color: white;">Nome ↕</a>
+            </th>
+            <th>CRO</th>
+            <th>Especialidade</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="dentista : ${dentistas}">
+            <td th:text="${dentista.id}"></td>
+            <td th:text="${dentista.nome}"></td>
+            <td th:text="${dentista.cro}"></td>
+            <td th:text="${dentista.especialidade}"></td>
+            <td>
+                <a th:href="@{/dentistas/editar/{id}(id=${dentista.id})}" class="btn btn-warning btn-sm">Editar</a>
+                <a th:href="@{/dentistas/deletar/{id}(id=${dentista.id})}" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
