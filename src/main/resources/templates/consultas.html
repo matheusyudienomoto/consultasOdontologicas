@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerenciamento de Consultas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2>Agendamento de Consultas</h2>
+
+    <div class="d-flex justify-content-between mb-3 mt-4">
+        <a th:href="@{/consultas/novo}" class="btn btn-primary">+ Agendar Consulta</a>
+        <div>
+            <a th:href="@{/pacientes}" class="btn btn-outline-secondary me-2">Pacientes</a>
+            <a th:href="@{/dentistas}" class="btn btn-outline-secondary">Dentistas</a>
+        </div>
+    </div>
+
+    <div th:if="${mensagemSucesso}" class="alert alert-success" th:text="${mensagemSucesso}"></div>
+    <div th:if="${mensagemErro}" class="alert alert-danger" th:text="${mensagemErro}"></div>
+
+    <table class="table table-striped table-bordered mt-3">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Paciente</th>
+            <th>Dentista</th>
+            <th>Data e Hora</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="consulta : ${consultas}">
+            <td th:text="${consulta.id}"></td>
+            <td th:text="${consulta.paciente != null ? consulta.paciente.nome : 'Não informado'}"></td>
+            <td th:text="${consulta.dentista != null ? consulta.dentista.nome : 'Não informado'}"></td>
+            <td th:text="${#temporals.format(consulta.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+            <td>
+                <a th:href="@{/consultas/editar/{id}(id=${consulta.id})}" class="btn btn-warning btn-sm">Editar</a>
+                <a th:href="@{/consultas/deletar/{id}(id=${consulta.id})}" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja cancelar esta consulta?');">Cancelar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulário de Consulta</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+
+  <h2 th:text="${consulta.id == null ? 'Agendar Nova Consulta' : 'Editar Consulta'}"></h2>
+
+  <div class="card mt-4">
+    <div class="card-body">
+
+      <form th:action="@{/consultas/salvar}" th:object="${consulta}" method="post">
+
+        <input type="hidden" th:field="*{id}">
+
+        <div class="mb-3">
+          <label for="paciente" class="form-label">Paciente</label>
+          <select class="form-select" id="paciente" th:field="*{paciente}" required>
+            <option value="">Selecione um paciente...</option>
+            <option th:each="p : ${pacientes}"
+                    th:value="${p.id}"
+                    th:text="${p.nome}">
+            </option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="dentista" class="form-label">Dentista</label>
+          <select class="form-select" id="dentista" th:field="*{dentista}" required>
+            <option value="">Selecione um dentista...</option>
+            <option th:each="d : ${dentistas}"
+                    th:value="${d.id}"
+                    th:text="${d.nome}">
+            </option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="dataHora" class="form-label">Data e Horário</label>
+          <input type="datetime-local" class="form-control" id="dataHora" th:field="*{dataHora}" required>
+        </div>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-success">Salvar Consulta</button>
+          <a th:href="@{/consultas}" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>
