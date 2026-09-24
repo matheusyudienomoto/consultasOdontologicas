@@ -49,6 +49,31 @@ public class LoginController {
         return "redirect:/agenda";
     }
 
+    // ABRIR TELA DE CADASTRO
+    @GetMapping("/cadastro")
+    public String mostrarCadastro() {
+        return "cadastro";
+    }
+
+    // CRIAR NOVA CONTA
+    @PostMapping("/cadastro")
+    public String cadastrar(@RequestParam String nome,
+                            @RequestParam String login,
+                            @RequestParam String senha,
+                            @RequestParam String confirmacaoSenha,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            usuarioService.cadastrar(nome.trim(), login.trim(), senha, confirmacaoSenha);
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("mensagemErro", e.getMessage());
+            redirectAttributes.addFlashAttribute("nome", nome);
+            redirectAttributes.addFlashAttribute("login", login);
+            return "redirect:/cadastro";
+        }
+        redirectAttributes.addFlashAttribute("mensagemSucesso", "Conta criada com sucesso! Faça login para continuar.");
+        return "redirect:/login";
+    }
+
     // SAIR DO SISTEMA
     @GetMapping("/logout")
     public String sair(HttpSession session, RedirectAttributes redirectAttributes) {

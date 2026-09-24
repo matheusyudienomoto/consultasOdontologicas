@@ -25,6 +25,24 @@ public class UsuarioService {
                 .filter(u -> u.getSenhaHash().equals(gerarHash(senha)));
     }
 
+    // Cadastra um novo usuário, validando login repetido e tamanho da senha
+    public Usuario cadastrar(String nome, String login, String senha, String confirmacaoSenha) {
+        if (usuarioRepository.findByLogin(login).isPresent()) {
+            throw new IllegalArgumentException("Este usuário já está em uso. Escolha outro.");
+        }
+        if (senha.length() < 6) {
+            throw new IllegalArgumentException("A senha deve ter pelo menos 6 caracteres.");
+        }
+        if (!senha.equals(confirmacaoSenha)) {
+            throw new IllegalArgumentException("As senhas não conferem.");
+        }
+        Usuario usuario = new Usuario();
+        usuario.setNome(nome);
+        usuario.setLogin(login);
+        usuario.setSenhaHash(gerarHash(senha));
+        return usuarioRepository.save(usuario);
+    }
+
     // Cria o usuário administrador na primeira execução do sistema
     public void criarAdminSeNaoExistir(String login, String senha) {
         if (usuarioRepository.findByLogin(login).isEmpty()) {

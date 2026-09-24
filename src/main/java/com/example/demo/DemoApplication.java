@@ -17,12 +17,12 @@ public class DemoApplication implements WebMvcConfigurer {
 		SpringApplication.run(DemoApplication.class, args);
 	}
 
-	// Todas as rotas exigem login, exceto a própria tela de login
+	// Todas as rotas exigem login, exceto as telas de login e cadastro
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(new LoginInterceptor())
 				.addPathPatterns("/**")
-				.excludePathPatterns("/login", "/error", "/css/**", "/js/**");
+				.excludePathPatterns("/login", "/cadastro", "/error", "/css/**", "/js/**");
 	}
 
 	// Cria o usuário administrador ao iniciar, caso ainda não exista
