@@ -1,65 +1,57 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Agenda de Consultas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Agenda')}"></head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/agenda">🦷 OdontoSys</a>
-        <div class="navbar-nav">
-            <a class="nav-link active" th:href="@{/agenda}">Agenda</a>
-            <a class="nav-link" th:href="@{/pacientes}">Pacientes</a>
-            <a class="nav-link" th:href="@{/dentistas}">Dentistas</a>
-            <a class="nav-link" th:href="@{/consultas}">Consultas</a>
-            <a class="nav-link" th:href="@{/logout}">Sair</a>
-        </div>
-    </div>
-</nav>
-<div class="container mt-5">
-    <h2>Agenda de Consultas</h2>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('agenda')}"></aside>
 
-    <div class="d-flex justify-content-between mb-3 mt-4">
-        <a th:href="@{/consultas/novo}" class="btn btn-primary">+ Agendar Consulta</a>
-
-        <div class="d-flex align-items-center">
-            <label for="filtroDentista" class="form-label me-2 mb-0">Dentista</label>
-            <select id="filtroDentista" class="form-select">
-                <option value="">Todos os dentistas</option>
-                <option th:each="d : ${dentistas}" th:value="${d.id}" th:text="${d.nome}"></option>
-            </select>
-        </div>
-    </div>
-
-    <div class="card shadow-sm border-0 mt-3">
-        <div class="card-body p-4">
-            <div id="calendario"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Detalhes da consulta ao clicar no calendário -->
-<div class="modal fade" id="modalConsulta" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Detalhes da Consulta</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <main class="main">
+        <div class="cabecalho">
+            <div>
+                <h1>Agenda</h1>
+                <p>Consultas da clínica por dia, semana ou mês</p>
             </div>
-            <div class="modal-body">
-                <p><strong>Paciente:</strong> <span id="detPaciente"></span></p>
-                <p><strong>Dentista:</strong> <span id="detDentista"></span></p>
-                <p><strong>Data e Hora:</strong> <span id="detDataHora"></span></p>
-                <p class="mb-0"><strong>Status:</strong> <span id="detStatus"></span></p>
-            </div>
-            <div class="modal-footer">
-                <a id="detEditar" href="#" class="btn btn-warning">Editar</a>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            <div class="acoes">
+                <label for="filtroDentista" class="visually-hidden">Filtrar por dentista</label>
+                <select id="filtroDentista" class="form-select">
+                    <option value="">Todos os dentistas</option>
+                    <option th:each="d : ${dentistas}" th:value="${d.id}" th:text="${d.nome}"></option>
+                </select>
+                <a th:href="@{/consultas/novo}" class="btn btn-primary text-nowrap">+ Agendar consulta</a>
             </div>
         </div>
-    </div>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <div class="legenda" th:if="${!dentistas.isEmpty()}">
+            <span th:each="d : ${dentistas}"><i th:style="'background:' + ${coresDentistas[d.id]}"></i><span th:text="${d.nome}"></span></span>
+        </div>
+
+        <div class="agenda-corpo">
+            <div class="painel agenda-calendario">
+                <div id="calendario"></div>
+            </div>
+
+            <!-- Detalhes da consulta clicada no calendário -->
+            <aside class="painel detalhe" aria-live="polite">
+                <h2>Consulta</h2>
+                <p id="detVazio" class="detalhe-vazio">Clique em uma consulta no calendário para ver os detalhes.</p>
+                <div id="detConteudo" class="d-flex flex-column gap-3" hidden>
+                    <p id="detPaciente" class="paciente"></p>
+                    <span id="detStatus" class="status"></span>
+                    <dl>
+                        <div><dt>Data e horário</dt><dd id="detDataHora"></dd></div>
+                        <div><dt>Dentista</dt><dd id="detDentista"></dd></div>
+                    </dl>
+                    <div class="acoes">
+                        <a id="detEditar" href="#" class="btn btn-light">Editar</a>
+                        <a id="detExcluir" href="#" class="btn-link-acao perigo"
+                           onclick="return confirm('Tem certeza que deseja excluir esta consulta?');">Excluir</a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -68,8 +60,27 @@
 <script th:inline="javascript">
     const urlEventos = /*[[@{/agenda/eventos}]]*/ '/agenda/eventos';
     const urlEditar = /*[[@{/consultas/editar/}]]*/ '/consultas/editar/';
+    const urlExcluir = /*[[@{/consultas/deletar/}]]*/ '/consultas/deletar/';
     const filtro = document.getElementById('filtroDentista');
-    const modal = new bootstrap.Modal(document.getElementById('modalConsulta'));
+    let selecionada = null;
+
+    const formatarHora = data => data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const nomeStatus = status => status.charAt(0) + status.slice(1).toLowerCase();
+
+    function mostrarDetalhes(evento) {
+        document.getElementById('detVazio').hidden = true;
+        document.getElementById('detConteudo').hidden = false;
+        document.getElementById('detPaciente').textContent = evento.title;
+        document.getElementById('detDentista').textContent = evento.extendedProps.dentista;
+        const dia = evento.start.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+        document.getElementById('detDataHora').textContent =
+            dia + ', ' + formatarHora(evento.start) + ' às ' + formatarHora(evento.end);
+        const status = document.getElementById('detStatus');
+        status.textContent = nomeStatus(evento.extendedProps.status);
+        status.className = 'status status-' + evento.extendedProps.status.toLowerCase();
+        document.getElementById('detEditar').href = urlEditar + evento.id;
+        document.getElementById('detExcluir').href = urlExcluir + evento.id;
+    }
 
     const calendario = new FullCalendar.Calendar(document.getElementById('calendario'), {
         locale: 'pt-br',
@@ -79,10 +90,15 @@
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        slotMinTime: '07:00:00',
-        slotMaxTime: '20:00:00',
+        hiddenDays: [0],
+        slotMinTime: '08:00:00',
+        slotMaxTime: '19:00:00',
         allDaySlot: false,
+        nowIndicator: true,
+        slotEventOverlap: false,
         height: 'auto',
+        dayMaxEvents: 3,
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit' },
         // Busca as consultas do período visível, aplicando o filtro de dentista
         events: function (info, sucesso, falha) {
             const params = new URLSearchParams({ start: info.startStr, end: info.endStr });
@@ -94,16 +110,35 @@
                 .then(sucesso)
                 .catch(falha);
         },
+        // Nome do paciente e horário em linhas próprias, cortando com reticências quando faltar espaço
+        eventContent: function (arg) {
+            const caixa = document.createElement('div');
+            caixa.className = 'ev-conteudo';
+            const nome = document.createElement('span');
+            nome.className = 'ev-nome';
+            nome.textContent = arg.event.title;
+            const hora = document.createElement('span');
+            hora.className = 'ev-hora';
+            hora.textContent = formatarHora(arg.event.start);
+            caixa.append(nome, hora);
+            return { domNodes: [caixa] };
+        },
+        eventDidMount: function (info) {
+            info.el.classList.add('consulta');
+            info.el.style.setProperty('--cor', info.event.extendedProps.cor);
+            info.el.title = info.event.title + ' · ' + formatarHora(info.event.start);
+            if (info.event.extendedProps.status === 'CANCELADO') {
+                info.el.classList.add('cancelada');
+            }
+            if (String(info.event.id) === selecionada) {
+                info.el.classList.add('selecionada');
+            }
+        },
         eventClick: function (info) {
-            const consulta = info.event;
-            document.getElementById('detPaciente').textContent = consulta.title;
-            document.getElementById('detDentista').textContent = consulta.extendedProps.dentista;
-            document.getElementById('detDataHora').textContent = consulta.start.toLocaleString('pt-BR', {
-                dateStyle: 'short', timeStyle: 'short'
-            });
-            document.getElementById('detStatus').textContent = consulta.extendedProps.status;
-            document.getElementById('detEditar').href = urlEditar + consulta.id;
-            modal.show();
+            document.querySelectorAll('.fc-event.selecionada').forEach(el => el.classList.remove('selecionada'));
+            info.el.classList.add('selecionada');
+            selecionada = String(info.event.id);
+            mostrarDetalhes(info.event);
         }
     });
 
