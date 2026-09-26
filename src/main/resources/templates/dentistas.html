@@ -1,65 +1,64 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Gerenciamento de Dentistas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Dentistas')}"></head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/consultas">🦷 OdontoSys</a>
-        <div class="navbar-nav">
-            <a class="nav-link" th:href="@{/agenda}">Agenda</a>
-            <a class="nav-link" th:href="@{/pacientes}">Pacientes</a>
-            <a class="nav-link" th:href="@{/dentistas}">Dentistas</a>
-            <a class="nav-link" th:href="@{/consultas}">Consultas</a>
-            <a class="nav-link" th:href="@{/logout}">Sair</a>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('dentistas')}"></aside>
+
+    <main class="main">
+        <div class="cabecalho">
+            <div>
+                <h1>Dentistas</h1>
+                <p>Profissionais que atendem na clínica</p>
+            </div>
+            <div class="acoes">
+                <a th:href="@{/dentistas/novo}" class="btn btn-primary">+ Novo dentista</a>
+            </div>
         </div>
-    </div>
-</nav>
-<div class="container mt-5">
-    <h2>Gerenciamento de Dentistas</h2>
 
-    <div class="d-flex justify-content-between mb-3 mt-4">
-        <a th:href="@{/dentistas/novo}" class="btn btn-primary">+ Novo Dentista</a>
+        <!-- Alertas do Bootstrap para feedback visual -->
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
 
-        <form th:action="@{/dentistas}" method="get" class="d-flex">
-            <input type="text" name="busca" class="form-control me-2" placeholder="Buscar por nome..." th:value="${param.busca}">
-            <button type="submit" class="btn btn-outline-success">Pesquisar</button>
-        </form>
-    </div>
+        <div class="painel">
+            <div class="painel-barra">
+                <form th:action="@{/dentistas}" method="get" class="d-flex gap-2">
+                    <label for="busca" class="visually-hidden">Buscar por nome</label>
+                    <input type="search" id="busca" name="busca" class="form-control" placeholder="Buscar por nome" th:value="${param.busca}">
+                    <button type="submit" class="btn btn-light">Pesquisar</button>
+                </form>
+                <span class="contagem" th:text="${#lists.size(dentistas)} + (${#lists.size(dentistas)} == 1 ? ' dentista' : ' dentistas')"></span>
+            </div>
 
-    <!-- Alertas do Bootstrap para feedback visual -->
-    <div th:if="${mensagemSucesso}" class="alert alert-success" th:text="${mensagemSucesso}"></div>
-    <div th:if="${mensagemErro}" class="alert alert-danger" th:text="${mensagemErro}"></div>
-
-    <table class="table table-hover align-middle mt-3 border">
-        <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>
-                <!-- Link para acionar a ordenação alternada -->
-                <a th:href="@{/dentistas(sort=${nextSort})}" style="text-decoration: none; color: white;">Nome ↕</a>
-            </th>
-            <th>CRO</th>
-            <th>Especialidade</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="dentista : ${dentistas}">
-            <td th:text="${dentista.id}"></td>
-            <td th:text="${dentista.nome}"></td>
-            <td th:text="${dentista.cro}"></td>
-            <td th:text="${dentista.especialidade}"></td>
-            <td>
-                <a th:href="@{/dentistas/editar/{id}(id=${dentista.id})}" class="btn btn-warning btn-sm">Editar</a>
-                <a th:href="@{/dentistas/deletar/{id}(id=${dentista.id})}" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+            <div class="table-responsive">
+                <table class="table tabela align-middle">
+                    <thead>
+                    <tr>
+                        <!-- Link para acionar a ordenação alternada -->
+                        <th><a th:href="@{/dentistas(sort=${nextSort})}">Nome ↕</a></th>
+                        <th>CRO</th>
+                        <th>Especialidade</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="dentista : ${dentistas}">
+                        <td class="nome" th:text="${dentista.nome}"></td>
+                        <td class="suave" th:text="${dentista.cro}"></td>
+                        <td th:text="${dentista.especialidade}"></td>
+                        <td class="text-end text-nowrap">
+                            <a th:href="@{/dentistas/editar/{id}(id=${dentista.id})}" class="btn-link-acao">Editar</a>
+                            <a th:href="@{/dentistas/deletar/{id}(id=${dentista.id})}" class="btn-link-acao perigo" onclick="return confirm('Tem certeza que deseja excluir?');">Excluir</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${dentistas.isEmpty()}">
+                        <td colspan="4" class="vazio">Nenhum dentista encontrado.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
