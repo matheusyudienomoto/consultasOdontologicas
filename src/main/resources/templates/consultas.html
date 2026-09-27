@@ -1,60 +1,63 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Gerenciamento de Consultas</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Consultas')}"></head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/consultas">🦷 OdontoSys</a>
-        <div class="navbar-nav">
-            <a class="nav-link" th:href="@{/agenda}">Agenda</a>
-            <a class="nav-link" th:href="@{/pacientes}">Pacientes</a>
-            <a class="nav-link" th:href="@{/dentistas}">Dentistas</a>
-            <a class="nav-link" th:href="@{/consultas}">Consultas</a>
-            <a class="nav-link" th:href="@{/logout}">Sair</a>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('consultas')}"></aside>
+
+    <main class="main">
+        <div class="cabecalho">
+            <div>
+                <h1>Consultas</h1>
+                <p>Todas as consultas agendadas na clínica</p>
+            </div>
+            <div class="acoes">
+                <a th:href="@{/agenda}" class="btn btn-light">Ver na agenda</a>
+                <a th:href="@{/consultas/novo}" class="btn btn-primary">+ Agendar consulta</a>
+            </div>
         </div>
-    </div>
-</nav>
-<div class="container mt-5">
-    <h2>Agendamento de Consultas</h2>
 
-    <div class="d-flex justify-content-between mb-3 mt-4">
-        <a th:href="@{/consultas/novo}" class="btn btn-primary">+ Agendar Consulta</a>
-        <div>
-            <a th:href="@{/pacientes}" class="btn btn-outline-secondary me-2">Pacientes</a>
-            <a th:href="@{/dentistas}" class="btn btn-outline-secondary">Dentistas</a>
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <div class="painel">
+            <div class="painel-barra">
+                <span class="contagem" th:text="${#lists.size(consultas)} + (${#lists.size(consultas)} == 1 ? ' consulta' : ' consultas')"></span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table tabela align-middle">
+                    <thead>
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Dentista</th>
+                        <th>Data e hora</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="consulta : ${consultas}" th:with="status=${consulta.status != null ? consulta.status : 'AGENDADO'}">
+                        <td class="nome" th:text="${consulta.paciente != null ? consulta.paciente.nome : 'Não informado'}"></td>
+                        <td th:text="${consulta.dentista != null ? consulta.dentista.nome : 'Não informado'}"></td>
+                        <td th:text="${#temporals.format(consulta.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
+                            <span class="status" th:classappend="'status-' + ${#strings.toLowerCase(status)}"
+                                  th:text="${#strings.capitalize(#strings.toLowerCase(status))}"></span>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a th:href="@{/consultas/editar/{id}(id=${consulta.id})}" class="btn-link-acao">Editar</a>
+                            <a th:href="@{/consultas/deletar/{id}(id=${consulta.id})}" class="btn-link-acao perigo" onclick="return confirm('Tem certeza que deseja excluir esta consulta?');">Excluir</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${consultas.isEmpty()}">
+                        <td colspan="5" class="vazio">Nenhuma consulta agendada.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
-
-    <div th:if="${mensagemSucesso}" class="alert alert-success" th:text="${mensagemSucesso}"></div>
-    <div th:if="${mensagemErro}" class="alert alert-danger" th:text="${mensagemErro}"></div>
-
-    <table class="table table-hover align-middle mt-3 border">
-        <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Paciente</th>
-            <th>Dentista</th>
-            <th>Data e Hora</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="consulta : ${consultas}">
-            <td th:text="${consulta.id}"></td>
-            <td th:text="${consulta.paciente != null ? consulta.paciente.nome : 'Não informado'}"></td>
-            <td th:text="${consulta.dentista != null ? consulta.dentista.nome : 'Não informado'}"></td>
-            <td th:text="${#temporals.format(consulta.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
-            <td>
-                <a th:href="@{/consultas/editar/{id}(id=${consulta.id})}" class="btn btn-warning btn-sm">Editar</a>
-                <a th:href="@{/consultas/deletar/{id}(id=${consulta.id})}" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja cancelar esta consulta?');">Cancelar</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+    </main>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
