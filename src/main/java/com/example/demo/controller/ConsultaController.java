@@ -1,9 +1,9 @@
 package com.example.demo.controller;
 
 import com.example.demo.model.Consulta;
-import com.example.demo.repository.ConsultaRepository;
 import com.example.demo.repository.DentistaRepository;
 import com.example.demo.repository.PacienteRepository;
+import com.example.demo.service.ConsultaService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -13,22 +13,22 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/consultas")
 public class ConsultaController {
 
-    private final ConsultaRepository consultaRepository;
+    private final ConsultaService consultaService;
     private final PacienteRepository pacienteRepository;
     private final DentistaRepository dentistaRepository;
 
-    // Injeção de dependência dos três repositórios necessários
-    public ConsultaController(ConsultaRepository consultaRepository,
+    // As regras de agendamento ficam no service; os repositórios só populam os dropdowns
+    public ConsultaController(ConsultaService consultaService,
                               PacienteRepository pacienteRepository,
                               DentistaRepository dentistaRepository) {
-        this.consultaRepository = consultaRepository;
+        this.consultaService = consultaService;
         this.pacienteRepository = pacienteRepository;
         this.dentistaRepository = dentistaRepository;
     }
 
     @GetMapping
     public String listar(Model model) {
-        model.addAttribute("consultas", consultaRepository.findAll());
+        model.addAttribute("consultas", consultaService.listarTodas());
         return "consultas";
     }
 
@@ -43,14 +43,20 @@ public class ConsultaController {
 
     @PostMapping("/salvar")
     public String salvar(@ModelAttribute Consulta consulta, RedirectAttributes redirectAttributes) {
-        consultaRepository.save(consulta);
+        try {
+            consultaService.salvar(consulta);
+        } catch (RuntimeException e) {
+            // Mostra na listagem o motivo de a consulta não ter sido salva
+            redirectAttributes.addFlashAttribute("mensagemErro", "Erro: " + e.getMessage());
+            return "redirect:/consultas";
+        }
         redirectAttributes.addFlashAttribute("mensagemSucesso", "Consulta agendada com sucesso!");
         return "redirect:/consultas";
     }
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
-        Consulta consulta = consultaRepository.findById(id).orElse(null);
+        Consulta consulta = consultaService.buscarPorId(id).orElse(null);
         if (consulta == null) {
             redirectAttributes.addFlashAttribute("mensagemErro", "Erro: Consulta não encontrada.");
             return "redirect:/consultas";
@@ -63,7 +69,7 @@ public class ConsultaController {
 
     @GetMapping("/deletar/{id}")
     public String deletar(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        consultaRepository.deleteById(id);
+        consultaService.excluir(id);
         redirectAttributes.addFlashAttribute("mensagemSucesso", "Consulta cancelada com sucesso!");
         return "redirect:/consultas";
     }
