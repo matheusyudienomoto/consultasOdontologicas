@@ -15,15 +15,28 @@
 
 <body>
 
-<!-- Marca do sistema -->
-<a th:fragment="marca" th:href="@{/agenda}" class="marca">
+<!-- Marca do sistema, com o subtítulo definido por quem usa -->
+<a th:fragment="marca(subtitulo)" th:href="@{/agenda}" class="marca">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3.5c-2.4 0-4 1.9-4 4.6 0 2.2.9 3.6 1.6 5.4.8 2 1 7 2.9 7 1.6 0 1.6-4.6 4-4.6s2.4 4.6 4 4.6c1.9 0 2.1-5 2.9-7 .7-1.8 1.6-3.2 1.6-5.4 0-2.7-1.6-4.6-4-4.6-1.9 0-2.9 1-4.5 1s-2.6-1-4.5-1z"/></svg>
-    <span>OdontoSys<small>Gestão de consultório</small></span>
+    <span>OdontoSys<small th:text="${subtitulo}">Gestão de consultório</small></span>
 </a>
+
+<!-- Curvas decorativas e dentadura flutuante das telas de login e cadastro -->
+<th:block th:fragment="acessoIlustracao">
+    <svg class="acesso-curvas" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M-40 520 C 180 300, 520 140, 820 210"/>
+        <path class="forte" d="M120 760 C 380 860, 700 760, 760 520"/>
+        <path d="M-60 360 C 120 420, 200 600, 140 900"/>
+        <path class="forte" d="M560 60 C 760 120, 820 300, 700 420"/>
+    </svg>
+    <div class="acesso-ilustracao" aria-hidden="true">
+        <img th:src="@{/img/dentadura.png}" src="/img/dentadura.png" alt="" width="900" height="597">
+    </div>
+</th:block>
 
 <!-- Barra lateral: recebe o nome da tela ativa para destacar no menu -->
 <aside th:fragment="sidebar(ativo)" class="side">
-    <a th:replace="~{fragments/layout :: marca}"></a>
+    <a th:replace="~{fragments/layout :: marca('Gestão de consultório')}"></a>
 
     <nav class="menu">
         <div class="menu-titulo">Atendimento</div>
@@ -67,6 +80,19 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
 </th:block>
+
+<!-- Botão de olho que mostra ou esconde a senha digitada -->
+<script th:fragment="verSenha">
+    document.querySelectorAll('.ver-senha').forEach(botao => {
+        botao.addEventListener('click', () => {
+            const campo = document.getElementById(botao.dataset.senha);
+            const mostrar = campo.type === 'password';
+            campo.type = mostrar ? 'text' : 'password';
+            botao.classList.toggle('visivel', mostrar);
+            botao.setAttribute('aria-label', mostrar ? 'Esconder senha' : 'Mostrar senha');
+        });
+    });
+</script>
 
 </body>
 </html>
