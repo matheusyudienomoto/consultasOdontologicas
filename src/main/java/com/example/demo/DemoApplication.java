@@ -22,7 +22,7 @@ public class DemoApplication implements WebMvcConfigurer {
 	public void addInterceptors(InterceptorRegistry registry) {
 		registry.addInterceptor(new LoginInterceptor())
 				.addPathPatterns("/**")
-				.excludePathPatterns("/login", "/cadastro", "/error", "/css/**", "/js/**");
+				.excludePathPatterns("/login", "/cadastro", "/error", "/css/**", "/js/**", "/img/**");
 	}
 
 	// Cria o usuário administrador ao iniciar, caso ainda não exista
