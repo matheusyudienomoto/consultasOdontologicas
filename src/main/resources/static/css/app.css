@@ -291,15 +291,23 @@ body {
     place-items: center;
     min-height: 420px;
 }
-.acesso-ilustracao img {
+/* A animação é dividida em duas camadas para os movimentos não brigarem:
+   .flutuante faz a entrada (sobe aparecendo) e a img faz o giro contínuo */
+.acesso-ilustracao .flutuante {
     position: relative;
     z-index: 1;
     width: min(100%, 620px);
+    animation: surgir 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.acesso-ilustracao img {
+    display: block;
+    width: 100%;
     height: auto;
     filter: drop-shadow(0 30px 40px rgba(14, 80, 82, 0.18));
-    animation: flutuar 6s ease-in-out infinite;
+    /* "both" já posiciona a imagem no início do giro durante a entrada, sem salto */
+    animation: girar 10s linear 1.4s infinite both;
 }
-/* Sombra no "chão" que diminui quando a dentadura sobe */
+/* Sombra no "chão": acompanha o giro, menor quando a dentadura está no alto */
 .acesso-ilustracao::after {
     content: "";
     position: absolute;
@@ -308,18 +316,41 @@ body {
     height: 22px;
     border-radius: 50%;
     background: radial-gradient(ellipse at center, rgba(14, 80, 82, 0.22) 0%, rgba(14, 80, 82, 0) 70%);
-    animation: sombra 6s ease-in-out infinite;
+    animation: surgir-sombra 1.4s ease-out both, sombra 10s linear 1.4s infinite both;
 }
-@keyframes flutuar {
-    0%, 100% { transform: translateY(0) rotate(-1.5deg); }
-    50% { transform: translateY(-18px) rotate(1deg); }
+
+/* Entrada: vem de baixo, passa um pouco do ponto e assenta */
+@keyframes surgir {
+    0% { opacity: 0; transform: translateY(70px) scale(0.92); }
+    60% { opacity: 1; transform: translateY(-10px) scale(1.01); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes surgir-sombra {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Flutuação em círculo (12px na horizontal, 14px na vertical) com leve balanço */
+@keyframes girar {
+    0%    { transform: translate(0, -14px) rotate(-1deg); }
+    12.5% { transform: translate(8.5px, -9.9px) rotate(-0.2deg); }
+    25%   { transform: translate(12px, 0) rotate(0.8deg); }
+    37.5% { transform: translate(8.5px, 9.9px) rotate(1.4deg); }
+    50%   { transform: translate(0, 14px) rotate(1deg); }
+    62.5% { transform: translate(-8.5px, 9.9px) rotate(0.1deg); }
+    75%   { transform: translate(-12px, 0) rotate(-0.9deg); }
+    87.5% { transform: translate(-8.5px, -9.9px) rotate(-1.4deg); }
+    100%  { transform: translate(0, -14px) rotate(-1deg); }
 }
 @keyframes sombra {
-    0%, 100% { transform: scaleX(1); opacity: 1; }
-    50% { transform: scaleX(0.82); opacity: 0.65; }
+    0%    { transform: translateX(0) scaleX(0.84); }
+    25%   { transform: translateX(10px) scaleX(0.94); }
+    50%   { transform: translateX(0) scaleX(1.04); }
+    75%   { transform: translateX(-10px) scaleX(0.94); }
+    100%  { transform: translateX(0) scaleX(0.84); }
 }
 @media (prefers-reduced-motion: reduce) {
-    .acesso-ilustracao img, .acesso-ilustracao::after { animation: none; }
+    .acesso-ilustracao .flutuante, .acesso-ilustracao img, .acesso-ilustracao::after { animation: none; }
 }
 
 .acesso-caixa {
