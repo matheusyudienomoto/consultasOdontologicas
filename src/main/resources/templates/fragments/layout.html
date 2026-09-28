@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- Cabeçalho comum: Bootstrap, fonte e tema do sistema -->
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${titulo} + ' · OdontoSys'">OdontoSys</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/app.css}" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- Marca do sistema, com o subtítulo definido por quem usa -->
+<a th:fragment="marca(subtitulo)" th:href="@{/agenda}" class="marca">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 3.5c-2.4 0-4 1.9-4 4.6 0 2.2.9 3.6 1.6 5.4.8 2 1 7 2.9 7 1.6 0 1.6-4.6 4-4.6s2.4 4.6 4 4.6c1.9 0 2.1-5 2.9-7 .7-1.8 1.6-3.2 1.6-5.4 0-2.7-1.6-4.6-4-4.6-1.9 0-2.9 1-4.5 1s-2.6-1-4.5-1z"/></svg>
+    <span>OdontoSys<small th:text="${subtitulo}">Gestão de consultório</small></span>
+</a>
+
+<!-- Curvas decorativas e dentadura flutuante das telas de login e cadastro -->
+<th:block th:fragment="acessoIlustracao">
+    <svg class="acesso-curvas" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M-40 520 C 180 300, 520 140, 820 210"/>
+        <path class="forte" d="M120 760 C 380 860, 700 760, 760 520"/>
+        <path d="M-60 360 C 120 420, 200 600, 140 900"/>
+        <path class="forte" d="M560 60 C 760 120, 820 300, 700 420"/>
+    </svg>
+    <div class="acesso-ilustracao" aria-hidden="true">
+        <div class="flutuante">
+            <img th:src="@{/img/dentadura.png}" src="/img/dentadura.png" alt="" width="900" height="597">
+        </div>
+    </div>
+</th:block>
+
+<!-- Barra lateral: recebe o nome da tela ativa para destacar no menu -->
+<aside th:fragment="sidebar(ativo)" class="side">
+    <a th:replace="~{fragments/layout :: marca('Gestão de consultório')}"></a>
+
+    <nav class="menu">
+        <div class="menu-titulo">Atendimento</div>
+        <a th:href="@{/agenda}" class="menu-item" th:classappend="${ativo == 'agenda'} ? 'ativo'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+            Agenda
+        </a>
+        <a th:href="@{/consultas}" class="menu-item" th:classappend="${ativo == 'consultas'} ? 'ativo'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+            Consultas
+        </a>
+
+        <div class="menu-titulo">Cadastros</div>
+        <a th:href="@{/pacientes}" class="menu-item" th:classappend="${ativo == 'pacientes'} ? 'ativo'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5"/></svg>
+            Pacientes
+        </a>
+        <a th:href="@{/dentistas}" class="menu-item" th:classappend="${ativo == 'dentistas'} ? 'ativo'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c1-3 3.2-4.5 6-4.5s5 1.5 6 4.5M16 4.5v6M13 7.5h6"/></svg>
+            Dentistas
+        </a>
+    </nav>
+
+    <div class="usuario">
+        <div class="avatar" th:text="${session.usuarioLogado != null} ? ${#strings.substring(session.usuarioLogado, 0, 1)} : '?'">A</div>
+        <div>
+            <span class="usuario-nome" th:text="${session.usuarioLogado}">Administrador</span>
+            <a th:href="@{/logout}">Sair</a>
+        </div>
+    </div>
+</aside>
+
+<!-- Mensagens de sucesso e erro enviadas pelos controllers -->
+<th:block th:fragment="alertas">
+    <div th:if="${mensagemSucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${mensagemSucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+    <div th:if="${mensagemErro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${mensagemErro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+</th:block>
+
+<!-- Botão de olho que mostra ou esconde a senha digitada -->
+<script th:fragment="verSenha">
+    document.querySelectorAll('.ver-senha').forEach(botao => {
+        botao.addEventListener('click', () => {
+            const campo = document.getElementById(botao.dataset.senha);
+            const mostrar = campo.type === 'password';
+            campo.type = mostrar ? 'text' : 'password';
+            botao.classList.toggle('visivel', mostrar);
+            botao.setAttribute('aria-label', mostrar ? 'Esconder senha' : 'Mostrar senha');
+        });
+    });
+</script>
+
+</body>
+</html>

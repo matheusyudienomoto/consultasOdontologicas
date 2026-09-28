@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head(${consulta.id == null} ? 'Agendar consulta' : 'Editar consulta')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('consultas')}"></aside>
+
+    <main class="main">
+        <div class="cabecalho">
+            <div>
+                <h1 th:text="${consulta.id == null ? 'Agendar consulta' : 'Editar consulta'}"></h1>
+                <p>Atendimento de segunda a sábado, das 8h às 18h</p>
+            </div>
+        </div>
+
+        <form th:action="@{/consultas/salvar}" th:object="${consulta}" method="post" class="painel form-painel" id="formConsulta">
+            <input type="hidden" th:field="*{id}">
+
+            <div class="painel-corpo form-grade">
+                <div>
+                    <label for="paciente" class="form-label">Paciente</label>
+                    <select class="form-select" id="paciente" th:field="*{paciente}" required>
+                        <option value="">Selecione um paciente</option>
+                        <option th:each="p : ${pacientes}" th:value="${p.id}" th:text="${p.nome}"></option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="dentista" class="form-label">Dentista</label>
+                    <select class="form-select" id="dentista" th:field="*{dentista}" required>
+                        <option value="">Selecione um dentista</option>
+                        <option th:each="d : ${dentistas}" th:value="${d.id}" th:text="${d.nome}"></option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="dataHora" class="form-label">Data e horário</label>
+                    <!-- O ícone de calendário abre o seletor de dia e hora -->
+                    <div class="input-group" id="seletorDataHora">
+                        <input type="text" class="form-control" id="dataHora" name="dataHora" data-input required
+                               placeholder="Escolha o dia e o horário"
+                               th:value="${consulta.dataHora != null} ? ${#temporals.format(consulta.dataHora, 'yyyy-MM-dd''T''HH:mm')} : ''">
+                        <button type="button" class="btn btn-calendario" data-toggle aria-label="Abrir calendário">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+                        </button>
+                    </div>
+                    <div class="invalid-feedback" id="dataHoraErro">Escolha a data e o horário da consulta.</div>
+                </div>
+
+                <div>
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" th:field="*{status}">
+                        <option value="AGENDADO">Agendado</option>
+                        <option value="CONFIRMADO">Confirmado</option>
+                        <option value="REALIZADO">Realizado</option>
+                        <option value="CANCELADO">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-rodape">
+                <button type="submit" class="btn btn-primary">Salvar consulta</button>
+                <a th:href="@{/consultas}" class="btn btn-light">Cancelar</a>
+            </div>
+        </form>
+    </main>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/pt.js"></script>
+<script>
+    // Seletor de data e hora: envia no formato que o Spring entende (2026-10-01T14:30)
+    // e mostra para o usuário no formato brasileiro (01/10/2026 às 14:30)
+    const seletor = flatpickr('#seletorDataHora', {
+        wrap: true,
+        locale: 'pt',
+        enableTime: true,
+        time_24hr: true,
+        minuteIncrement: 15,
+        minTime: '08:00',
+        maxTime: '18:00',
+        dateFormat: 'Y-m-d\\TH:i',
+        altInput: true,
+        altFormat: 'd/m/Y \\à\\s H:i',
+        disable: [data => data.getDay() === 0]
+    });
+
+    // O campo original fica oculto, então a validação de "obrigatório" é feita aqui
+    document.getElementById('formConsulta').addEventListener('submit', evento => {
+        if (!seletor.selectedDates.length) {
+            evento.preventDefault();
+            seletor.altInput.classList.add('is-invalid');
+            document.getElementById('dataHoraErro').style.display = 'block';
+        }
+    });
+    seletor.config.onChange.push(() => {
+        seletor.altInput.classList.remove('is-invalid');
+        document.getElementById('dataHoraErro').style.display = '';
+    });
+</script>
+</body>
+</html>

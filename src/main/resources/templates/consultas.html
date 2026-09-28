@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Consultas')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('consultas')}"></aside>
+
+    <main class="main">
+        <div class="cabecalho">
+            <div>
+                <h1>Consultas</h1>
+                <p>Todas as consultas agendadas na clínica</p>
+            </div>
+            <div class="acoes">
+                <a th:href="@{/agenda}" class="btn btn-light">Ver na agenda</a>
+                <a th:href="@{/consultas/novo}" class="btn btn-primary">+ Agendar consulta</a>
+            </div>
+        </div>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <div class="painel">
+            <div class="painel-barra">
+                <span class="contagem" th:text="${#lists.size(consultas)} + (${#lists.size(consultas)} == 1 ? ' consulta' : ' consultas')"></span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table tabela align-middle">
+                    <thead>
+                    <tr>
+                        <th>Paciente</th>
+                        <th>Dentista</th>
+                        <th>Data e hora</th>
+                        <th>Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="consulta : ${consultas}" th:with="status=${consulta.status != null ? consulta.status : 'AGENDADO'}">
+                        <td class="nome" th:text="${consulta.paciente != null ? consulta.paciente.nome : 'Não informado'}"></td>
+                        <td th:text="${consulta.dentista != null ? consulta.dentista.nome : 'Não informado'}"></td>
+                        <td th:text="${#temporals.format(consulta.dataHora, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
+                            <span class="status" th:classappend="'status-' + ${#strings.toLowerCase(status)}"
+                                  th:text="${#strings.capitalize(#strings.toLowerCase(status))}"></span>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a th:href="@{/consultas/editar/{id}(id=${consulta.id})}" class="btn-link-acao">Editar</a>
+                            <a th:href="@{/consultas/deletar/{id}(id=${consulta.id})}" class="btn-link-acao perigo" onclick="return confirm('Tem certeza que deseja excluir esta consulta?');">Excluir</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${consultas.isEmpty()}">
+                        <td colspan="5" class="vazio">Nenhuma consulta agendada.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

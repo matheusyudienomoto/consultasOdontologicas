@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Agenda')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('agenda')}"></aside>
+
+    <main class="main">
+        <div class="cabecalho">
+            <div>
+                <h1>Agenda</h1>
+                <p>Consultas da clínica por dia, semana ou mês</p>
+            </div>
+            <div class="acoes">
+                <label for="filtroDentista" class="visually-hidden">Filtrar por dentista</label>
+                <select id="filtroDentista" class="form-select">
+                    <option value="">Todos os dentistas</option>
+                    <option th:each="d : ${dentistas}" th:value="${d.id}" th:text="${d.nome}"></option>
+                </select>
+                <a th:href="@{/consultas/novo}" class="btn btn-primary text-nowrap">+ Agendar consulta</a>
+            </div>
+        </div>
+
+        <th:block th:replace="~{fragments/layout :: alertas}"></th:block>
+
+        <div class="legenda" th:if="${!dentistas.isEmpty()}">
+            <span th:each="d : ${dentistas}"><i th:style="'background:' + ${coresDentistas[d.id]}"></i><span th:text="${d.nome}"></span></span>
+        </div>
+
+        <div class="agenda-corpo">
+            <div class="painel agenda-calendario">
+                <div id="calendario"></div>
+            </div>
+
+            <!-- Detalhes da consulta clicada no calendário -->
+            <aside class="painel detalhe" aria-live="polite">
+                <h2>Consulta</h2>
+                <p id="detVazio" class="detalhe-vazio">Clique em uma consulta no calendário para ver os detalhes.</p>
+                <div id="detConteudo" class="d-flex flex-column gap-3" hidden>
+                    <p id="detPaciente" class="paciente"></p>
+                    <span id="detStatus" class="status"></span>
+                    <dl>
+                        <div><dt>Data e horário</dt><dd id="detDataHora"></dd></div>
+                        <div><dt>Dentista</dt><dd id="detDentista"></dd></div>
+                    </dl>
+                    <div class="acoes">
+                        <a id="detEditar" href="#" class="btn btn-light">Editar</a>
+                        <a id="detExcluir" href="#" class="btn-link-acao perigo"
+                           onclick="return confirm('Tem certeza que deseja excluir esta consulta?');">Excluir</a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/pt-br.global.min.js"></script>
+<script th:inline="javascript">
+    const urlEventos = /*[[@{/agenda/eventos}]]*/ '/agenda/eventos';
+    const urlEditar = /*[[@{/consultas/editar/}]]*/ '/consultas/editar/';
+    const urlExcluir = /*[[@{/consultas/deletar/}]]*/ '/consultas/deletar/';
+    const filtro = document.getElementById('filtroDentista');
+    let selecionada = null;
+
+    const formatarHora = data => data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const nomeStatus = status => status.charAt(0) + status.slice(1).toLowerCase();
+
+    function mostrarDetalhes(evento) {
+        document.getElementById('detVazio').hidden = true;
+        document.getElementById('detConteudo').hidden = false;
+        document.getElementById('detPaciente').textContent = evento.title;
+        document.getElementById('detDentista').textContent = evento.extendedProps.dentista;
+        const dia = evento.start.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+        document.getElementById('detDataHora').textContent =
+            dia + ', ' + formatarHora(evento.start) + ' às ' + formatarHora(evento.end);
+        const status = document.getElementById('detStatus');
+        status.textContent = nomeStatus(evento.extendedProps.status);
+        status.className = 'status status-' + evento.extendedProps.status.toLowerCase();
+        document.getElementById('detEditar').href = urlEditar + evento.id;
+        document.getElementById('detExcluir').href = urlExcluir + evento.id;
+    }
+
+    const calendario = new FullCalendar.Calendar(document.getElementById('calendario'), {
+        locale: 'pt-br',
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        hiddenDays: [0],
+        slotMinTime: '08:00:00',
+        slotMaxTime: '19:00:00',
+        allDaySlot: false,
+        nowIndicator: true,
+        slotEventOverlap: false,
+        height: 'auto',
+        dayMaxEvents: 3,
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit' },
+        // Busca as consultas do período visível, aplicando o filtro de dentista
+        events: function (info, sucesso, falha) {
+            const params = new URLSearchParams({ start: info.startStr, end: info.endStr });
+            if (filtro.value) {
+                params.append('dentistaId', filtro.value);
+            }
+            fetch(urlEventos + '?' + params)
+                .then(resposta => resposta.json())
+                .then(sucesso)
+                .catch(falha);
+        },
+        // Nome do paciente e horário em linhas próprias, cortando com reticências quando faltar espaço
+        eventContent: function (arg) {
+            const caixa = document.createElement('div');
+            caixa.className = 'ev-conteudo';
+            const nome = document.createElement('span');
+            nome.className = 'ev-nome';
+            nome.textContent = arg.event.title;
+            const hora = document.createElement('span');
+            hora.className = 'ev-hora';
+            hora.textContent = formatarHora(arg.event.start);
+            caixa.append(nome, hora);
+            return { domNodes: [caixa] };
+        },
+        eventDidMount: function (info) {
+            info.el.classList.add('consulta');
+            info.el.style.setProperty('--cor', info.event.extendedProps.cor);
+            info.el.title = info.event.title + ' · ' + formatarHora(info.event.start);
+            if (info.event.extendedProps.status === 'CANCELADO') {
+                info.el.classList.add('cancelada');
+            }
+            if (String(info.event.id) === selecionada) {
+                info.el.classList.add('selecionada');
+            }
+        },
+        eventClick: function (info) {
+            document.querySelectorAll('.fc-event.selecionada').forEach(el => el.classList.remove('selecionada'));
+            info.el.classList.add('selecionada');
+            selecionada = String(info.event.id);
+            mostrarDetalhes(info.event);
+        }
+    });
+
+    calendario.render();
+    filtro.addEventListener('change', () => calendario.refetchEvents());
+</script>
+</body>
+</html>

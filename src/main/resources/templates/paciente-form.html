@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head(${paciente.id == null} ? 'Novo paciente' : 'Editar paciente')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('pacientes')}"></aside>
+
+    <main class="main">
+        <div class="cabecalho">
+            <div>
+                <!-- O título muda dependendo se é cadastro ou edição -->
+                <h1 th:text="${paciente.id == null ? 'Novo paciente' : 'Editar paciente'}"></h1>
+                <p>Dados de identificação e contato</p>
+            </div>
+        </div>
+
+        <form th:action="@{/pacientes/salvar}" th:object="${paciente}" method="post" class="painel form-painel">
+            <!-- O ID fica oculto, só serve para o Spring saber se é para atualizar ou criar um novo -->
+            <input type="hidden" th:field="*{id}">
+
+            <div class="painel-corpo form-grade">
+                <div class="inteiro">
+                    <label for="nome" class="form-label">Nome completo</label>
+                    <input type="text" class="form-control" id="nome" th:field="*{nome}" required>
+                </div>
+                <div>
+                    <label for="cpf" class="form-label">CPF</label>
+                    <input type="text" class="form-control" id="cpf" th:field="*{cpf}" required maxlength="14" placeholder="000.000.000-00">
+                </div>
+                <div>
+                    <label for="telefone" class="form-label">Telefone</label>
+                    <input type="text" class="form-control" id="telefone" th:field="*{telefone}" maxlength="20" placeholder="(00) 00000-0000">
+                </div>
+            </div>
+
+            <div class="form-rodape">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a th:href="@{/pacientes}" class="btn btn-light">Cancelar</a>
+            </div>
+        </form>
+    </main>
+</div>
+</body>
+</html>

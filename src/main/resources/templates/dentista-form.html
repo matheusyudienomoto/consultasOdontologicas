@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head(${dentista.id == null} ? 'Novo dentista' : 'Editar dentista')}"></head>
+<body>
+<div class="app">
+    <aside th:replace="~{fragments/layout :: sidebar('dentistas')}"></aside>
+
+    <main class="main">
+        <div class="cabecalho">
+            <div>
+                <h1 th:text="${dentista.id == null ? 'Novo dentista' : 'Editar dentista'}"></h1>
+                <p>Dados profissionais do dentista</p>
+            </div>
+        </div>
+
+        <form th:action="@{/dentistas/salvar}" th:object="${dentista}" method="post" class="painel form-painel">
+            <input type="hidden" th:field="*{id}">
+
+            <div class="painel-corpo form-grade">
+                <div class="inteiro">
+                    <label for="nome" class="form-label">Nome completo</label>
+                    <input type="text" class="form-control" id="nome" th:field="*{nome}" required>
+                </div>
+                <div>
+                    <label for="cro" class="form-label">CRO</label>
+                    <input type="text" class="form-control" id="cro" th:field="*{cro}" required placeholder="Ex: 12345-PR">
+                </div>
+                <div>
+                    <label for="especialidade" class="form-label">Especialidade</label>
+                    <input type="text" class="form-control" id="especialidade" th:field="*{especialidade}" required placeholder="Ex: Ortodontia">
+                </div>
+            </div>
+
+            <div class="form-rodape">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a th:href="@{/dentistas}" class="btn btn-light">Cancelar</a>
+            </div>
+        </form>
+    </main>
+</div>
+</body>
+</html>
